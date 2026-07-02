@@ -16,7 +16,7 @@ def main():
 
         ci = 1.96 * (std / math.sqrt(n))
 
-        # Calculate IQR-based threshold (matching human-like scorer approach)
+        # Calculate IQR-based threshold (matching pattern conformity scorer approach)
         q1 = np.percentile(scores, 25)
         q3 = np.percentile(scores, 75)
         iqr = q3 - q1

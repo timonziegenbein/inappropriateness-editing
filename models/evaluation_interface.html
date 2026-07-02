@@ -835,7 +835,7 @@
 
       // --- 3. RENDER REWARDS CHART ---
       const rewardsCtx = document.getElementById('dataset-rewards-chart').getContext('2d');
-      const rewardsLabels = ['Semantic Similarity', 'Fluency', 'Human-Like', 'App', 'Perfect'];
+      const rewardsLabels = ['Semantic Similarity', 'Fluency', 'Pattern Conformity', 'App', 'Perfect'];
       const rewardsChartDatasets = [];
 
       datasets.forEach((ds, index) => {
@@ -845,7 +845,7 @@
           const dataPoints = [
               averages.semantic_similarity,
               averages.fluency,
-              averages.human_like,
+              averages.pattern_conformity,
               averages.app,
               averages.perfect
           ];
@@ -1361,7 +1361,7 @@
           reasonRelaxedPercent: reasonRelaxedPercent,
           ss: avgRewards.semantic_similarity || null,
           fl: avgRewards.fluency || null,
-          hl: avgRewards.human_like || null,
+          hl: avgRewards.pattern_conformity || null,
           app: avgRewards.app || null,
           perfect: avgRewards.perfect || null
         };
@@ -2056,7 +2056,7 @@
         if (edit.rewards) {
           const parts = [];
           // List of keys to display in order
-          const keys = ['semantic_similarity', 'fluency', 'human_like', 'app', 'perfect'];
+          const keys = ['semantic_similarity', 'fluency', 'pattern_conformity', 'app', 'perfect'];
           keys.forEach((key) => {
             if (edit.rewards.hasOwnProperty(key)) {
               const val = Number(edit.rewards[key]);
@@ -2181,7 +2181,7 @@
         }
         if (edit.rewards) {
           const parts = [];
-          for (const key of ['semantic_similarity', 'fluency', 'human_like', 'app', 'perfect']) {
+          for (const key of ['semantic_similarity', 'fluency', 'pattern_conformity', 'app', 'perfect']) {
             if (edit.rewards.hasOwnProperty(key)) {
               const val = Number(edit.rewards[key]);
               const formatted = typeof val === 'number' ? val.toFixed(3) : edit.rewards[key];
@@ -2249,22 +2249,22 @@
       const displayedCount = displayEdits ? displayEdits.length : 0;
       // Helper to calculate average scores for a set of edits
       function averageScores(editsArray) {
-        const sums = { semantic_similarity: 0, fluency: 0, human_like: 0, perfect: 0 };
+        const sums = { semantic_similarity: 0, fluency: 0, pattern_conformity: 0, perfect: 0 };
         let count = 0;
         (editsArray || []).forEach(e => {
           if (e && e.rewards) {
             sums.semantic_similarity += Number(e.rewards.semantic_similarity) || 0;
             sums.fluency += Number(e.rewards.fluency) || 0;
-            sums.human_like += Number(e.rewards.human_like) || 0;
+            sums.pattern_conformity += Number(e.rewards.pattern_conformity) || 0;
             sums.perfect += Number(e.rewards.perfect) || 0;
             count++;
           }
         });
-        if (count === 0) return { semantic_similarity: 0, fluency: 0, human_like: 0, perfect: 0 };
+        if (count === 0) return { semantic_similarity: 0, fluency: 0, pattern_conformity: 0, perfect: 0 };
         return {
           semantic_similarity: sums.semantic_similarity / count,
           fluency: sums.fluency / count,
-          human_like: sums.human_like / count,
+          pattern_conformity: sums.pattern_conformity / count,
           perfect: sums.perfect / count
         };
       }
@@ -2317,7 +2317,7 @@
       html.push(`<div class="label">Perfect edits</div><div class="value">${displayedCount}</div>`);
       html.push(`<div class="label">Reason correct (strict)</div><div class="value">${reasonCorrectCount} (${reasonCorrectPercent}%)</div>`);
       html.push(`<div class="label">Reason correct (relaxed)</div><div class="value">${reasonCorrectRelaxedCount} (${reasonCorrectRelaxedPercent}%)</div>`);
-      html.push(`<div class="label">Avg scores (all edits)</div><div class="value">SS ${avgAll.semantic_similarity.toFixed(3)}, FL ${avgAll.fluency.toFixed(3)}, HL ${avgAll.human_like.toFixed(3)}, PF ${avgAll.perfect.toFixed(3)}</div>`);
+      html.push(`<div class="label">Avg scores (all edits)</div><div class="value">SS ${avgAll.semantic_similarity.toFixed(3)}, FL ${avgAll.fluency.toFixed(3)}, HL ${avgAll.pattern_conformity.toFixed(3)}, PF ${avgAll.perfect.toFixed(3)}</div>`);
       html.push(`<div class="label">Perfect edits by reason</div><div class="value">${escapeHtml(reasonStrings || 'None')}</div>`);
       html.push('</div>');
       html.push('</div>');
@@ -2468,8 +2468,8 @@
             validPerfectEdits: 0,
             reasonCorrectEdits: 0,
             reasonCorrectRelaxedEdits: 0,
-            rewardSums: { semantic_similarity: 0, fluency: 0, human_like: 0, perfect: 0 },
-            validPerfectRewardSums: { semantic_similarity: 0, fluency: 0, human_like: 0, perfect: 0 },
+            rewardSums: { semantic_similarity: 0, fluency: 0, pattern_conformity: 0, perfect: 0 },
+            validPerfectRewardSums: { semantic_similarity: 0, fluency: 0, pattern_conformity: 0, perfect: 0 },
             predictedSums: {},
             predictedBeforeSums: {},
             predictedAfterSums: {},
@@ -2495,14 +2495,14 @@
                   if (ed.rewards) {
                     dataset.datasetStats.rewardSums.semantic_similarity += Number(ed.rewards.semantic_similarity) || 0;
                     dataset.datasetStats.rewardSums.fluency += Number(ed.rewards.fluency) || 0;
-                    dataset.datasetStats.rewardSums.human_like += Number(ed.rewards.human_like) || 0;
+                    dataset.datasetStats.rewardSums.pattern_conformity += Number(ed.rewards.pattern_conformity) || 0;
                     dataset.datasetStats.rewardSums.perfect += Number(ed.rewards.perfect) || 0;
                   }
                   if (ed.rewards && Number(ed.rewards.perfect) === 1) {
                     dataset.datasetStats.validPerfectEdits += 1;
                     dataset.datasetStats.validPerfectRewardSums.semantic_similarity += Number(ed.rewards.semantic_similarity) || 0;
                     dataset.datasetStats.validPerfectRewardSums.fluency += Number(ed.rewards.fluency) || 0;
-                    dataset.datasetStats.validPerfectRewardSums.human_like += Number(ed.rewards.human_like) || 0;
+                    dataset.datasetStats.validPerfectRewardSums.pattern_conformity += Number(ed.rewards.pattern_conformity) || 0;
                     dataset.datasetStats.validPerfectRewardSums.perfect += Number(ed.rewards.perfect) || 0;
                   }
                 }
@@ -2578,12 +2578,12 @@
         dataset.examples.forEach(example => {
             const allEditsInExample = example.edits;
             if (allEditsInExample && allEditsInExample.length > 0) {
-                const rewardSumsInExample = { semantic_similarity: 0, fluency: 0, human_like: 0, app: 0, perfect: 0 };
+                const rewardSumsInExample = { semantic_similarity: 0, fluency: 0, pattern_conformity: 0, app: 0, perfect: 0 };
                 allEditsInExample.forEach(edit => {
                     if (edit.rewards) {
                         rewardSumsInExample.semantic_similarity += Number(edit.rewards.semantic_similarity) || 0;
                         rewardSumsInExample.fluency += Number(edit.rewards.fluency) || 0;
-                        rewardSumsInExample.human_like += Number(edit.rewards.human_like) || 0;
+                        rewardSumsInExample.pattern_conformity += Number(edit.rewards.pattern_conformity) || 0;
                         rewardSumsInExample.app += Number(edit.rewards.app) || 0;
                         rewardSumsInExample.perfect += Number(edit.rewards.perfect) || 0;
                     }
@@ -2596,7 +2596,7 @@
             }
         });
 
-        const finalRewardAverages = { semantic_similarity: 0, fluency: 0, human_like: 0, app: 0, perfect: 0 };
+        const finalRewardAverages = { semantic_similarity: 0, fluency: 0, pattern_conformity: 0, app: 0, perfect: 0 };
         if (perExampleRewardMeans.length > 0) {
             perExampleRewardMeans.forEach(means => {
               for (const key in finalRewardAverages) {

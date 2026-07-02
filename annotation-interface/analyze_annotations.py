@@ -789,14 +789,14 @@ def get_agreement_examples_lowest_scores(df):
     Get 5 bad examples from each model for each category.
 
     For nat, sim, flu: Find examples with lowest sum in target category that have highest difference with other categories
-    For hl: Find examples with low sum in ALL categories
+    For pc: Find examples with low sum in ALL categories
     """
-    categories = ['nat', 'sim', 'flu', 'hl']
+    categories = ['nat', 'sim', 'flu', 'pc']
     category_names = {
         'nat': 'Naturalness',
         'sim': 'Similarity',
         'flu': 'Fluency',
-        'hl': 'Human-likeness'
+        'pc': 'Pattern Conformity'
     }
 
     # Filter to only keep post_ids that appear for all three users (3, 4, 5)
@@ -832,8 +832,8 @@ def get_agreement_examples_lowest_scores(df):
             other_categories = [c for c in categories if c != category]
             other_sums = {c: row[c] for c in other_categories}
 
-            if category == 'hl':
-                # For human-likeness: we want low scores in ALL categories
+            if category == 'pc':
+                # For pattern conformity: we want low scores in ALL categories
                 # Quality metric: negative total sum (lower total is better)
                 total_sum = target_sum + sum(other_sums.values())
                 quality_metric = -total_sum
@@ -867,7 +867,7 @@ def get_agreement_examples_lowest_scores(df):
 
     for category in categories:
         print(f'\n{category_names[category]} ({category}):')
-        if category == 'hl':
+        if category == 'pc':
             print('  (Finding examples with LOW sum in ALL categories)')
         else:
             print(f'  (Finding examples with LOW sum in {category} but HIGH sum in others)')
@@ -886,7 +886,7 @@ def get_agreement_examples_lowest_scores(df):
                     print(f'      {category.upper()} Sum: {example["target_sum"]:.1f}')
                     other_scores_str = ', '.join([f'{cat.upper()}: {score:.1f}' for cat, score in example['other_sums'].items()])
                     print(f'      Other Sums: {other_scores_str}')
-                    if category == 'hl':
+                    if category == 'pc':
                         total = example["target_sum"] + sum(example['other_sums'].values())
                         print(f'      Total Sum: {total:.1f}')
                     else:
@@ -903,12 +903,12 @@ def get_good_edit_examples(df):
     """
     from collections import Counter
 
-    categories = ['nat', 'sim', 'flu', 'hl']
+    categories = ['nat', 'sim', 'flu', 'pc']
     category_names = {
         'nat': 'Naturalness',
         'sim': 'Similarity',
         'flu': 'Fluency',
-        'hl': 'Human-likeness'
+        'pc': 'Pattern Conformity'
     }
 
     # Filter to only keep post_ids that appear for all three users (3, 4, 5)
@@ -1023,7 +1023,7 @@ def analyze_abs_study():
     df['nat'] = df['result'].apply(lambda x: int(x['otherErrorQuestion1'][-1]))
     df['sim'] = df['result'].apply(lambda x: int(x['otherErrorQuestion2'][-1])-5 if x['otherErrorQuestion2'][-2:] != '10' else int(x['otherErrorQuestion2'][-2:])-5)
     df['flu'] = df['result'].apply(lambda x: int(x['otherErrorQuestion3'][-2:])-10)
-    df['hl'] = df['result'].apply(lambda x: int(x['otherErrorQuestion4'][-2:])-15)
+    df['pc'] = df['result'].apply(lambda x: int(x['otherErrorQuestion4'][-2:])-15)
     df['id_source'] = df['post_id'].apply(lambda x: x.split('_')[0])
     df['id_model'] = df['post_id'].apply(lambda x: x.split('_')[1])
 
@@ -1043,8 +1043,8 @@ def analyze_abs_study():
     df_mean['nat'] = df_mean['nat'].apply(lambda x: round(x, 2))
     df_mean['sim'] = df_mean['sim'].apply(lambda x: round(x, 2))
     df_mean['flu'] = df_mean['flu'].apply(lambda x: round(x, 2))
-    df_mean['hl'] = df_mean['hl'].apply(lambda x: round(x, 2))
-    print(df_mean[['id_model', 'nat', 'sim', 'flu', 'hl']])
+    df_mean['pc'] = df_mean['pc'].apply(lambda x: round(x, 2))
+    print(df_mean[['id_model', 'nat', 'sim', 'flu', 'pc']])
 
     # Filter to only keep post_ids that appear for all three users (3, 4, 5)
     df_1 = df[df['user_id'].isin([3,4,5])]
@@ -1060,17 +1060,17 @@ def analyze_abs_study():
     rd_df1_nat = [df_1[df_1['user_id']==user_id].sort_values('post_id')['nat'].tolist() for user_id in [3, 4, 5]]
     rd_df1_sim = [df_1[df_1['user_id']==user_id].sort_values('post_id')['sim'].tolist() for user_id in [3, 4, 5]]
     rd_df1_flu = [df_1[df_1['user_id']==user_id].sort_values('post_id')['flu'].tolist() for user_id in [3, 4, 5]]
-    rd_df1_hl = [df_1[df_1['user_id']==user_id].sort_values('post_id')['hl'].tolist() for user_id in [3, 4, 5]]
+    rd_df1_pc = [df_1[df_1['user_id']==user_id].sort_values('post_id')['pc'].tolist() for user_id in [3, 4, 5]]
 
     ka_nat = krippendorff.alpha(reliability_data=rd_df1_nat, level_of_measurement='ordinal')
     ka_sim = krippendorff.alpha(reliability_data=rd_df1_sim, level_of_measurement='ordinal')
     ka_flu = krippendorff.alpha(reliability_data=rd_df1_flu, level_of_measurement='ordinal')
-    ka_hl = krippendorff.alpha(reliability_data=rd_df1_hl, level_of_measurement='ordinal')
+    ka_pc = krippendorff.alpha(reliability_data=rd_df1_pc, level_of_measurement='ordinal')
 
     print('Nat Krippendorff\'s alpha: {}'.format(ka_nat))
     print('Sim Krippendorff\'s alpha: {}'.format(ka_sim))
     print('Fluency Krippendorff\'s alpha: {}'.format(ka_flu))
-    print('HL Krippendorff\'s alpha: {}'.format(ka_hl))
+    print('Pattern Conformity Krippendorff\'s alpha: {}'.format(ka_pc))
 
     # Get examples where annotators agree on lowest scores
     bad_examples = get_agreement_examples_lowest_scores(df)
@@ -1100,7 +1100,7 @@ def generate_latex_examples(bad_examples_dict, good_examples_list):
         'nat': 'Naturalness',
         'sim': 'Similarity',
         'flu': 'Fluency',
-        'hl': 'Human-likeness'
+        'pc': 'Pattern Conformity'
     }
 
     output_file = 'agreement_examples_latex.tex'
@@ -1166,7 +1166,7 @@ def generate_latex_examples(bad_examples_dict, good_examples_list):
                 f.write('\\bottomrule\n')
                 f.write('\\end{tabularx}\n')
                 model_escaped = model.replace('_', '\\_')
-                if category == 'hl':
+                if category == 'pc':
                     f.write(f'\\caption{{Examples from {model_escaped} with low summed scores in {category_names[category]} and all other categories.}}\n')
                 else:
                     f.write(f'\\caption{{Examples from {model_escaped} with low summed scores in {category_names[category]} but high scores in other categories.}}\n')

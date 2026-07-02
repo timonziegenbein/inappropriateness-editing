@@ -21,7 +21,7 @@ from ops.edit_applier import apply_edits_to_argument
 # Cache to avoid duplicate calculations when both reward functions are called
 _edit_scores_cache = {}
 
-def _calculate_edit_scores(prompts, completions, semantic_similarity_scorer, human_like_scorer, fluency_scorer):
+def _calculate_edit_scores(prompts, completions, semantic_similarity_scorer, pattern_conformity_scorer, fluency_scorer):
     """
     Core internal function that calculates all edit scores (both sparse and dense) in a single pass.
     Returns structured data that can be used by both local and dense reward functions.
@@ -85,11 +85,11 @@ def _calculate_edit_scores(prompts, completions, semantic_similarity_scorer, hum
             # Store scores in a list to only include enabled scorers
             enabled_scores = []
 
-            if human_like_scorer is not None:
-                human_like_reward = human_like_scorer.calculate_human_likeness(
+            if pattern_conformity_scorer is not None:
+                pattern_conformity_reward = pattern_conformity_scorer.calculate_pattern_conformity(
                     original_argument, original_sentence, inappropriate_part, rewritten_part
                 )
-                enabled_scores.append(human_like_reward)
+                enabled_scores.append(pattern_conformity_reward)
 
             if semantic_similarity_scorer is not None:
                 semantic_similarity_reward, ss_score = semantic_similarity_scorer.calculate_semantic_similarity(
@@ -145,7 +145,7 @@ def _calculate_edit_scores(prompts, completions, semantic_similarity_scorer, hum
     return result
 
 @weave.op(tracing_sample_rate=0.1)
-def dense_local_appropriateness_reward(prompts, completions, semantic_similarity_scorer, human_like_scorer, fluency_scorer, **kwargs):
+def dense_local_appropriateness_reward(prompts, completions, semantic_similarity_scorer, pattern_conformity_scorer, fluency_scorer, **kwargs):
     """
     Dense local reward that returns the average of binary scores from enabled scorers.
 
@@ -156,22 +156,22 @@ def dense_local_appropriateness_reward(prompts, completions, semantic_similarity
     - Edit passing 1/3 checks: score = 0.33
     - Edit passing 0/3 checks: score = 0.0
 
-    All enabled scorers (semantic similarity, fluency, human-like) are used to define
+    All enabled scorers (semantic similarity, fluency, pattern conformity) are used to define
     "perfect" edits that pass to the global reward function.
     """
     _, dense_scores, _, _, _ = _calculate_edit_scores(
-        prompts, completions, semantic_similarity_scorer, human_like_scorer, fluency_scorer
+        prompts, completions, semantic_similarity_scorer, pattern_conformity_scorer, fluency_scorer
     )
 
     return dense_scores
 
 @weave.op(tracing_sample_rate=0.1)
-def global_appropriateness_reward(prompts, completions, appropriateness_scorer, semantic_similarity_scorer, human_like_scorer, fluency_scorer, **kwargs):
+def global_appropriateness_reward(prompts, completions, appropriateness_scorer, semantic_similarity_scorer, pattern_conformity_scorer, fluency_scorer, **kwargs):
     """
     Global reward measuring inappropriateness reduction on perfect edits.
 
     Perfect edits are those that pass ALL enabled local scorers (semantic similarity,
-    fluency, and human-like). This reward measures document-level inappropriateness
+    fluency, and pattern conformity). This reward measures document-level inappropriateness
     reduction after applying these perfect edits.
 
     Args:
@@ -179,7 +179,7 @@ def global_appropriateness_reward(prompts, completions, appropriateness_scorer, 
         completions: List of completions
         appropriateness_scorer: Scorer for measuring inappropriateness
         semantic_similarity_scorer: Local semantic similarity scorer (used for filtering perfect edits)
-        human_like_scorer: Local human-like scorer (used for filtering perfect edits)
+        pattern_conformity_scorer: Local pattern conformity scorer (used for filtering perfect edits)
         fluency_scorer: Local fluency scorer (used for filtering perfect edits)
 
     Returns:
@@ -189,7 +189,7 @@ def global_appropriateness_reward(prompts, completions, appropriateness_scorer, 
 
     # Get perfect edits and processed prompts from _calculate_edit_scores
     _, _, all_perfect_edits, all_original_sentences, all_original_arguments = _calculate_edit_scores(
-        prompts, completions, semantic_similarity_scorer, human_like_scorer, fluency_scorer
+        prompts, completions, semantic_similarity_scorer, pattern_conformity_scorer, fluency_scorer
     )
 
     for idx in range(len(prompts)):

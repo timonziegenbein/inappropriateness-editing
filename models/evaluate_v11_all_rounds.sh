@@ -1,5 +1,5 @@
 #!/bin/bash
-# Evaluate all v11 files with the new human-like scorer (PPO classifier)
+# Evaluate all v11 files with the new pattern conformity scorer (PPO classifier)
 
 echo "=================================="
 echo "Evaluating all v11 files"
@@ -8,10 +8,10 @@ echo "=================================="
 # Define all v11 model files to evaluate
 models=(
     "grpo_global_sentence_no_fluency_v11"
-    "grpo_global_sentence_no_human_like_v11"
+    "grpo_global_sentence_no_pattern_conformity_v11"
     "grpo_global_sentence_no_semantic_similarity_v11"
     "grpo_global_sentence_only_fluency_v11"
-    "grpo_global_sentence_only_human_like_v11"
+    "grpo_global_sentence_only_pattern_conformity_v11"
     "grpo_global_sentence_only_semantic_similarity_v11"
 )
 

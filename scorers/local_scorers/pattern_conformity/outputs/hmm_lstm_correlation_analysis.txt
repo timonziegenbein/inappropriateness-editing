@@ -1,0 +1,188 @@
+================================================================================
+CORRELATION ANALYSIS: HMM vs LSTM
+================================================================================
+
+================================================================================
+EDIT LEVEL
+================================================================================
+
+OVERALL CORRELATION (Combined across all sources)
+--------------------------------------------------------------------------------
+
+Pearson correlation:  -0.8817
+Spearman correlation: -0.9621
+
+PER-SOURCE CORRELATIONS
+--------------------------------------------------------------------------------
+
+Source       Pearson r       Spearman ρ      Interpretation
+----------------------------------------------------------------------
+Human        -0.8315         -0.9547         Strong correlation
+Coedit       -0.8813         -0.9516         Strong correlation
+Llama        -0.8913         -0.9627         Strong correlation
+Gemini       -0.8996         -0.9690         Strong correlation
+
+================================================================================
+RANKING AGREEMENT ANALYSIS
+================================================================================
+
+Do HMM and LSTM agree on which examples score highest?
+(Using top 20% as 'high scoring')
+
+Human:
+  Both high: 2344/2806 (83.5%)
+  HMM high only: 462
+  LSTM high only: 461
+  Jaccard similarity: 0.717
+
+Coedit:
+  Both high: 3612/4207 (85.9%)
+  HMM high only: 595
+  LSTM high only: 608
+  Jaccard similarity: 0.750
+
+Llama:
+  Both high: 6381/7683 (83.1%)
+  HMM high only: 1302
+  LSTM high only: 1302
+  Jaccard similarity: 0.710
+
+Gemini:
+  Both high: 4101/4925 (83.3%)
+  HMM high only: 824
+  LSTM high only: 822
+  Jaccard similarity: 0.714
+
+================================================================================
+DISAGREEMENT ANALYSIS
+================================================================================
+
+Examples where models strongly disagree:
+(HMM high but LSTM low, or vice versa)
+
+Human:
+  Strong disagreements: 315 (2.2%)
+  HMM high + LSTM low: 0
+  HMM low + LSTM high: 146
+
+Coedit:
+  Strong disagreements: 242 (1.2%)
+  HMM high + LSTM low: 0
+  HMM low + LSTM high: 179
+
+Llama:
+  Strong disagreements: 613 (1.6%)
+  HMM high + LSTM low: 0
+  HMM low + LSTM high: 455
+
+Gemini:
+  Strong disagreements: 777 (3.2%)
+  HMM high + LSTM low: 0
+  HMM low + LSTM high: 465
+
+
+================================================================================
+STRATEGY LEVEL
+================================================================================
+
+OVERALL CORRELATION (Combined across all sources)
+--------------------------------------------------------------------------------
+
+Pearson correlation:  -0.7336
+Spearman correlation: -0.9121
+
+PER-SOURCE CORRELATIONS
+--------------------------------------------------------------------------------
+
+Source       Pearson r       Spearman ρ      Interpretation
+----------------------------------------------------------------------
+Human        -0.7514         -0.9432         Strong correlation
+Coedit       -0.6839         -0.8916         Moderate correlation
+Llama        -0.7121         -0.8497         Strong correlation
+Gemini       -0.7254         -0.8455         Strong correlation
+
+================================================================================
+RANKING AGREEMENT ANALYSIS
+================================================================================
+
+Do HMM and LSTM agree on which examples score highest?
+(Using top 20% as 'high scoring')
+
+Human:
+  Both high: 2195/2615 (83.9%)
+  HMM high only: 420
+  LSTM high only: 419
+  Jaccard similarity: 0.723
+
+Coedit:
+  Both high: 1459/1708 (85.4%)
+  HMM high only: 249
+  LSTM high only: 249
+  Jaccard similarity: 0.746
+
+Llama:
+  Both high: 1943/2553 (76.1%)
+  HMM high only: 610
+  LSTM high only: 610
+  Jaccard similarity: 0.614
+
+Gemini:
+  Both high: 1347/1655 (81.4%)
+  HMM high only: 308
+  LSTM high only: 308
+  Jaccard similarity: 0.686
+
+================================================================================
+DISAGREEMENT ANALYSIS
+================================================================================
+
+Examples where models strongly disagree:
+(HMM high but LSTM low, or vice versa)
+
+Human:
+  Strong disagreements: 633 (4.8%)
+  HMM high + LSTM low: 0
+  HMM low + LSTM high: 170
+
+Coedit:
+  Strong disagreements: 1753 (20.5%)
+  HMM high + LSTM low: 0
+  HMM low + LSTM high: 792
+
+Llama:
+  Strong disagreements: 3420 (26.8%)
+  HMM high + LSTM low: 0
+  HMM low + LSTM high: 1012
+
+Gemini:
+  Strong disagreements: 2326 (28.1%)
+  HMM high + LSTM low: 0
+  HMM low + LSTM high: 1761
+
+
+================================================================================
+CONCLUSION
+================================================================================
+
+Edit Level Correlation (Pearson): -0.8817
+Strategy Level Correlation (Pearson): -0.7336
+
+EDIT LEVEL:
+  ⚠️  Strong correlation - models capture similar information
+  Consider using just one model at edit level
+
+STRATEGY LEVEL:
+  ⚠️  Strong correlation - models capture similar information
+  Consider using just one model at strategy level
+
+================================================================================
+KEY INSIGHTS
+================================================================================
+
+HMM: Captures transition patterns between edit operations
+LSTM: Captures sequence-level predictability (perplexity)
+
+Both provide different perspectives on 'pattern conformity':
+- HMM: Are the edit patterns similar to human editing patterns?
+- LSTM: Is the sequence predictable based on learned patterns?
+

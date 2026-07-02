@@ -5,8 +5,8 @@ This directory contains evaluation results with scorer judgments in JSONL format
 ## Contents (not included in submission due to size constraints)
 
 The full outputs include:
-- Edit-level scores from local scorers (semantic similarity, fluency, human-likeness)
-- Argument-level scores from global scorers (appropriateness, global human-likeness)
+- Edit-level scores from local scorers (semantic similarity, fluency, pattern conformity)
+- Argument-level scores from global scorers (appropriateness, global pattern conformity)
 - Aggregated metrics and statistics
 - Results from different scorer configurations (ablation studies)
 
@@ -28,7 +28,7 @@ python models/evaluate_edits.py \
 python models/evaluate_edits.py \
     --input_jsonl models/generated_edits/<model_name>.jsonl \
     --output_jsonl models/predictions/<model_name>_no_hl.jsonl \
-    --disable_human_like
+    --disable_pattern_conformity
 ```
 
 ## File Format

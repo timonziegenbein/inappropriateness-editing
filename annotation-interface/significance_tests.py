@@ -17,7 +17,7 @@ def load_annotation_data():
                                     if x['otherErrorQuestion2'][-2:] != '10'
                                     else int(x['otherErrorQuestion2'][-2:])-5)
     df['flu'] = df['result'].apply(lambda x: int(x['otherErrorQuestion3'][-2:])-10)
-    df['hl'] = df['result'].apply(lambda x: int(x['otherErrorQuestion4'][-2:])-15)
+    df['pc'] = df['result'].apply(lambda x: int(x['otherErrorQuestion4'][-2:])-15)
 
     # Extract model name from post_id (simple split by underscore)
     df['id_model'] = df['post_id'].apply(lambda x: x.split('_')[1])
@@ -38,12 +38,12 @@ def compute_significance_tests(df):
 
     Pairs data at the (source_id, user_id) level to account for within-source comparisons.
     """
-    categories = ['nat', 'sim', 'flu', 'hl']
+    categories = ['nat', 'sim', 'flu', 'pc']
     category_names = {
         'nat': 'Naturalness',
         'sim': 'Similarity',
         'flu': 'Fluency',
-        'hl': 'Human-likeness'
+        'pc': 'Pattern Conformity'
     }
 
     # Identify base model and v11 model to compare

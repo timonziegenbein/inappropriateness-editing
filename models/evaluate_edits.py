@@ -13,7 +13,7 @@ Usage:
 
     # Evaluate with specific scorers disabled (ablation study)
     python models/evaluate_edits.py --input_jsonl <input_file.jsonl> --output_jsonl <output_file.jsonl> \
-        --disable_human_like --disable_fluency
+        --disable_pattern_conformity --disable_fluency
 
     # Enable Weave tracing for monitoring calculations
     python models/evaluate_edits.py --input_jsonl <input_file.jsonl> --output_jsonl <output_file.jsonl> \
@@ -41,9 +41,9 @@ import weave
 from scorers.local_scorers.fluency.fluency_scorer import FluencyScorer
 from scorers.appropriateness.appropriateness_scorer import AppropriatenessScorer
 from scorers.local_scorers.semantic_similarity.semantic_similarity_scorer import SemanticSimilarityScorer
-from scorers.local_scorers.human_like.human_like_scorer import HumanLikeScorer
+from scorers.local_scorers.pattern_conformity.pattern_conformity_scorer import PatternConformityScorer
 from scorers.global_scorers.semantic_similarity.global_semantic_similarity_scorer import GlobalSemanticSimilarityScorer
-from scorers.global_scorers.human_like.global_human_like_scorer_v2 import GlobalHumanLikeScorerV2
+from scorers.global_scorers.pattern_conformity.global_pattern_conformity_scorer_v2 import GlobalPatternConformityScorerV2
 from scorers.global_scorers.fluency.global_fluency_scorer import GlobalFluencyScorer
 from ops.edit_applier import apply_edits_to_argument
 
@@ -114,7 +114,7 @@ def score_edit(
     original_sentence_context: Optional[str],
     semantic_similarity_scorer,
     fluency_scorer,
-    human_like_scorer,
+    pattern_conformity_scorer,
     appropriateness_scorer
 ) -> Dict[str, Any]:
     """Score a single edit with the provided scorers."""
@@ -134,7 +134,7 @@ def score_edit(
 
     semantic_similarity = 0.0
     fluency_score = 0.0
-    human_like = 0.0
+    pattern_conformity = 0.0
     app_reward = 0.0
     reason_correct = False
     reason_correct_relaxed = False
@@ -163,17 +163,17 @@ def score_edit(
                 fluency_score = 0.0
                 logger.error(f"Fluency check failed: {e}")
 
-        # Human-like
-        if human_like_scorer:
+        # Pattern conformity
+        if pattern_conformity_scorer:
             try:
                 context = original_sentence_context if original_sentence_context is not None else original_argument
-                human_like = human_like_scorer.calculate_human_likeness(
+                pattern_conformity = pattern_conformity_scorer.calculate_pattern_conformity(
                     original_argument, context, inappropriate_part, rewritten_part
                 )
-                logger.info(f"Human-like score: {human_like}")
+                logger.info(f"Pattern conformity score: {pattern_conformity}")
             except Exception as e:
-                human_like = 0.0
-                logger.error(f"Human-like check failed: {e}")
+                pattern_conformity = 0.0
+                logger.error(f"Pattern conformity check failed: {e}")
 
         # Edit-level appropriateness classifier reward
         if appropriateness_scorer:
@@ -219,17 +219,17 @@ def score_edit(
                 classifier_true_reason = None
                 logger.error(f"App reward check failed: {e}")
 
-    # Perfect reward: semantic similarity, fluency, and human-like must all pass
+    # Perfect reward: semantic similarity, fluency, and pattern conformity must all pass
     enabled_scores = []
     if semantic_similarity_scorer:
         enabled_scores.append(semantic_similarity)
     if fluency_scorer:
         enabled_scores.append(fluency_score)
-    if human_like_scorer:
-        enabled_scores.append(human_like)
+    if pattern_conformity_scorer:
+        enabled_scores.append(pattern_conformity)
 
     perfect = 1.0 if (is_well_formed and all(s == 1.0 for s in enabled_scores) and enabled_scores) else 0.0
-    logger.info(f"Perfect score: {perfect} (based on: semantic_similarity={semantic_similarity}, fluency={fluency_score}, human_like={human_like})")
+    logger.info(f"Perfect score: {perfect} (based on: semantic_similarity={semantic_similarity}, fluency={fluency_score}, pattern_conformity={pattern_conformity})")
 
     return {
         "reason": reason,
@@ -242,7 +242,7 @@ def score_edit(
         "rewards": {
             "semantic_similarity": float(semantic_similarity),
             "fluency": float(fluency_score),
-            "human_like": float(human_like),
+            "pattern_conformity": float(pattern_conformity),
             "app": float(app_reward),
             "perfect": float(perfect),
         },
@@ -255,7 +255,7 @@ def main(
     output_jsonl: str,
     disable_semantic_similarity: bool = False,
     disable_fluency: bool = False,
-    disable_human_like: bool = False,
+    disable_pattern_conformity: bool = False,
     disable_appropriateness: bool = False,
     weave_project: str = None,
 ):
@@ -277,14 +277,14 @@ def main(
     logger.info("Loading scorers (using default thresholds from scorer classes)...")
     # All scorers use their default thresholds defined in the class __init__
     semantic_similarity_scorer = None if disable_semantic_similarity else SemanticSimilarityScorer(_device)
-    human_like_scorer = None if disable_human_like else HumanLikeScorer(_device)
+    pattern_conformity_scorer = None if disable_pattern_conformity else PatternConformityScorer(_device)
     fluency_scorer = None if disable_fluency else FluencyScorer(_device)
     appropriateness_scorer = None if disable_appropriateness else AppropriatenessScorer(_device)
 
     # Global scorers (use their default thresholds)
     logger.info("Loading global scorers...")
     global_semantic_similarity_scorer = GlobalSemanticSimilarityScorer(_device)
-    global_human_like_scorer = GlobalHumanLikeScorerV2(_device)
+    global_pattern_conformity_scorer = GlobalPatternConformityScorerV2(_device)
     global_fluency_scorer = GlobalFluencyScorer(_device)
 
     # MetricsCalculator for computing App, Sim, NES, PPL
@@ -319,7 +319,7 @@ def main(
     imperfect_reasons = {
         'semantic_similarity_failed': 0,
         'fluency_failed': 0,
-        'human_like_failed': 0,
+        'pattern_conformity_failed': 0,
         'multiple_failed': 0
     }
 
@@ -327,7 +327,7 @@ def main(
     total_scorer_failures = {
         'semantic_similarity': 0,
         'fluency': 0,
-        'human_like': 0
+        'pattern_conformity': 0
     }
 
     start_all = time.time()
@@ -394,7 +394,7 @@ def main(
                     original_sentence_context=original_sentence,
                     semantic_similarity_scorer=semantic_similarity_scorer,
                     fluency_scorer=fluency_scorer,
-                    human_like_scorer=human_like_scorer,
+                    pattern_conformity_scorer=pattern_conformity_scorer,
                     appropriateness_scorer=appropriateness_scorer
                 )
                 scored_edit['original_sentence'] = original_sentence or ""
@@ -442,7 +442,7 @@ def main(
                     rewards = e.get("rewards", {})
                     ss = rewards.get("semantic_similarity", 0.0)
                     fluency = rewards.get("fluency", 0.0)
-                    human_like = rewards.get("human_like", 0.0)
+                    pattern_conformity = rewards.get("pattern_conformity", 0.0)
 
                     # Count which scorers failed
                     failed_scorers = []
@@ -452,9 +452,9 @@ def main(
                     if fluency_scorer and fluency != 1.0:
                         failed_scorers.append('fluency')
                         total_scorer_failures['fluency'] += 1
-                    if human_like_scorer and human_like != 1.0:
-                        failed_scorers.append('human_like')
-                        total_scorer_failures['human_like'] += 1
+                    if pattern_conformity_scorer and pattern_conformity != 1.0:
+                        failed_scorers.append('pattern_conformity')
+                        total_scorer_failures['pattern_conformity'] += 1
 
                     if len(failed_scorers) > 1:
                         imperfect_reasons['multiple_failed'] += 1
@@ -462,8 +462,8 @@ def main(
                         imperfect_reasons['semantic_similarity_failed'] += 1
                     elif 'fluency' in failed_scorers:
                         imperfect_reasons['fluency_failed'] += 1
-                    elif 'human_like' in failed_scorers:
-                        imperfect_reasons['human_like_failed'] += 1
+                    elif 'pattern_conformity' in failed_scorers:
+                        imperfect_reasons['pattern_conformity_failed'] += 1
 
             # Build argument after applying perfect edits
             # Apply to argument_for_edits (the text that was actually edited)
@@ -581,7 +581,7 @@ def main(
 
             # Global scorer metrics (perfect edits)
             global_ss_binary, global_ss_score = 0.0, 0.0
-            global_hl_score = 0.0  # V2 returns proportion of sentences passing (0.0 to 1.0)
+            global_pc_score = 0.0  # V2 returns proportion of sentences passing (0.0 to 1.0)
             global_fluency_binary, global_fluency_confidence = 0.0, 0.0
 
             try:
@@ -594,11 +594,11 @@ def main(
             try:
                 # Group perfect edits by sentence for V2 scorer
                 perfect_edits_by_sentence = _group_edits_by_sentence(perfect_edits)
-                global_hl_score = global_human_like_scorer.calculate_global_human_likeness(
+                global_pc_score = global_pattern_conformity_scorer.calculate_global_pattern_conformity(
                     argument, perfect_edits_by_sentence
                 )
             except Exception as e:
-                logger.error(f"Global human-likeness (perfect) failed: {e}")
+                logger.error(f"Global pattern conformity (perfect) failed: {e}")
 
             try:
                 global_fluency_binary, global_fluency_confidence = global_fluency_scorer.calculate_global_fluency(
@@ -609,7 +609,7 @@ def main(
 
             # Global scorer metrics (all valid edits)
             global_ss_binary_all, global_ss_score_all = 0.0, 0.0
-            global_hl_score_all = 0.0  # V2 returns proportion of sentences passing (0.0 to 1.0)
+            global_pc_score_all = 0.0  # V2 returns proportion of sentences passing (0.0 to 1.0)
             global_fluency_binary_all, global_fluency_confidence_all = 0.0, 0.0
 
             try:
@@ -622,11 +622,11 @@ def main(
             try:
                 # Group all valid edits by sentence for V2 scorer
                 all_valid_edits_by_sentence = _group_edits_by_sentence(all_valid_edits)
-                global_hl_score_all = global_human_like_scorer.calculate_global_human_likeness(
+                global_pc_score_all = global_pattern_conformity_scorer.calculate_global_pattern_conformity(
                     argument, all_valid_edits_by_sentence
                 )
             except Exception as e:
-                logger.error(f"Global human-likeness (all) failed: {e}")
+                logger.error(f"Global pattern conformity (all) failed: {e}")
 
             try:
                 global_fluency_binary_all, global_fluency_confidence_all = global_fluency_scorer.calculate_global_fluency(
@@ -675,14 +675,14 @@ def main(
                 "global_scores": {
                     "semantic_similarity_binary": global_ss_binary,
                     "semantic_similarity_score": global_ss_score,
-                    "human_like_score": global_hl_score,  # V2: proportion of sentences passing (0.0 to 1.0)
+                    "pattern_conformity_score": global_pc_score,  # V2: proportion of sentences passing (0.0 to 1.0)
                     "fluency_binary": global_fluency_binary,
                     "fluency_confidence": global_fluency_confidence,
                 },
                 "global_scores_all": {
                     "semantic_similarity_binary": global_ss_binary_all,
                     "semantic_similarity_score": global_ss_score_all,
-                    "human_like_score": global_hl_score_all,  # V2: proportion of sentences passing (0.0 to 1.0)
+                    "pattern_conformity_score": global_pc_score_all,  # V2: proportion of sentences passing (0.0 to 1.0)
                     "fluency_binary": global_fluency_binary_all,
                     "fluency_confidence": global_fluency_confidence_all,
                 },
@@ -726,12 +726,12 @@ def main(
         logger.info(f"  Single scorer failures:")
         logger.info(f"    - semantic_similarity_failed only: {imperfect_reasons['semantic_similarity_failed']} ({imperfect_reasons['semantic_similarity_failed'] / total_imperfect:.1%})")
         logger.info(f"    - fluency_failed only: {imperfect_reasons['fluency_failed']} ({imperfect_reasons['fluency_failed'] / total_imperfect:.1%})")
-        logger.info(f"    - human_like_failed only: {imperfect_reasons['human_like_failed']} ({imperfect_reasons['human_like_failed'] / total_imperfect:.1%})")
+        logger.info(f"    - pattern_conformity_failed only: {imperfect_reasons['pattern_conformity_failed']} ({imperfect_reasons['pattern_conformity_failed'] / total_imperfect:.1%})")
         logger.info(f"  - multiple_failed: {imperfect_reasons['multiple_failed']} ({imperfect_reasons['multiple_failed'] / total_imperfect:.1%})")
         logger.info(f"\n  Total failures per scorer (including multiple):")
         logger.info(f"    - semantic_similarity: {total_scorer_failures['semantic_similarity']} ({total_scorer_failures['semantic_similarity'] / total_imperfect:.1%})")
         logger.info(f"    - fluency: {total_scorer_failures['fluency']} ({total_scorer_failures['fluency'] / total_imperfect:.1%})")
-        logger.info(f"    - human_like: {total_scorer_failures['human_like']} ({total_scorer_failures['human_like'] / total_imperfect:.1%})")
+        logger.info(f"    - pattern_conformity: {total_scorer_failures['pattern_conformity']} ({total_scorer_failures['pattern_conformity'] / total_imperfect:.1%})")
 
     # Log per-dimension flip percentages
     logger.info("\nFlip percentages per dimension:")
@@ -749,7 +749,7 @@ if __name__ == "__main__":
     # Scorer toggles (thresholds are defined in scorer classes)
     parser.add_argument("--disable_semantic_similarity", action="store_true", help="Disable semantic similarity scorer.")
     parser.add_argument("--disable_fluency", action="store_true", help="Disable fluency scorer.")
-    parser.add_argument("--disable_human_like", action="store_true", help="Disable human-like scorer.")
+    parser.add_argument("--disable_pattern_conformity", action="store_true", help="Disable pattern conformity scorer.")
     parser.add_argument("--disable_appropriateness", action="store_true", help="Disable appropriateness scorer.")
     parser.add_argument("--weave_project", type=str, default=None, help="Weave project name for tracing (e.g., 'username/project-name'). If not provided, Weave tracing is disabled.")
 
@@ -760,7 +760,7 @@ if __name__ == "__main__":
         args.output_jsonl,
         disable_semantic_similarity=args.disable_semantic_similarity,
         disable_fluency=args.disable_fluency,
-        disable_human_like=args.disable_human_like,
+        disable_pattern_conformity=args.disable_pattern_conformity,
         disable_appropriateness=args.disable_appropriateness,
         weave_project=args.weave_project,
     )

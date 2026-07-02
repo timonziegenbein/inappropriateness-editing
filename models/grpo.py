@@ -13,7 +13,7 @@ import weave
 from prompts.edit_inappropriate_text import create_llm_prompt
 from scorers.reward_functions import global_appropriateness_reward, dense_local_appropriateness_reward
 from scorers.local_scorers.semantic_similarity.semantic_similarity_scorer import SemanticSimilarityScorer
-from scorers.local_scorers.human_like.human_like_scorer import HumanLikeScorer
+from scorers.local_scorers.pattern_conformity.pattern_conformity_scorer import PatternConformityScorer
 from scorers.local_scorers.fluency.fluency_scorer import FluencyScorer
 from scorers.appropriateness.appropriateness_scorer import AppropriatenessScorer
 
@@ -39,7 +39,7 @@ def main():
 
     # Local reward model flags
     parser.add_argument("--use_semantic_similarity", action="store_true", help="Enable semantic similarity scorer in local reward.")
-    parser.add_argument("--use_human_like", action="store_true", help="Enable human-like scorer in local reward.")
+    parser.add_argument("--use_pattern_conformity", action="store_true", help="Enable pattern conformity scorer in local reward.")
     parser.add_argument("--use_fluency", action="store_true", help="Enable fluency scorer in local reward.")
 
     # Training configuration flags
@@ -50,10 +50,10 @@ def main():
 
     logger.info("Local reward scorers configuration:")
     logger.info(f"  - Semantic Similarity: {'ENABLED' if args.use_semantic_similarity else 'DISABLED'}")
-    logger.info(f"  - Human-Like: {'ENABLED' if args.use_human_like else 'DISABLED'}")
+    logger.info(f"  - Pattern Conformity: {'ENABLED' if args.use_pattern_conformity else 'DISABLED'}")
     logger.info(f"  - Fluency: {'ENABLED' if args.use_fluency else 'DISABLED'}")
 
-    if not args.use_semantic_similarity and not args.use_human_like and not args.use_fluency:
+    if not args.use_semantic_similarity and not args.use_pattern_conformity and not args.use_fluency:
         logger.warning("WARNING: All local reward scorers are disabled! Local reward will always be 1.0.")
 
     # Auto-detect the latest checkpoint if resume path points to output directory
@@ -136,10 +136,10 @@ def main():
         semantic_similarity_scorer = SemanticSimilarityScorer(device)
         logger.info(f"Memory after semantic similarity scorer: {torch.cuda.memory_allocated(device)/1024**3:.2f} GB")
 
-    human_like_scorer = None
-    if args.use_human_like:
-        human_like_scorer = HumanLikeScorer(device)
-        logger.info(f"Memory after human-like scorer: {torch.cuda.memory_allocated(device)/1024**3:.2f} GB")
+    pattern_conformity_scorer = None
+    if args.use_pattern_conformity:
+        pattern_conformity_scorer = PatternConformityScorer(device)
+        logger.info(f"Memory after pattern conformity scorer: {torch.cuda.memory_allocated(device)/1024**3:.2f} GB")
 
     fluency_scorer = None
     if args.use_fluency:
@@ -229,7 +229,7 @@ def main():
                     completions,
                     appropriateness_scorer=appropriateness_scorer,
                     semantic_similarity_scorer=semantic_similarity_scorer,
-                    human_like_scorer=human_like_scorer,
+                    pattern_conformity_scorer=pattern_conformity_scorer,
                     fluency_scorer=fluency_scorer,
                     **kwargs
                 )
@@ -241,7 +241,7 @@ def main():
                     prompts,
                     completions,
                     semantic_similarity_scorer=semantic_similarity_scorer,
-                    human_like_scorer=human_like_scorer,
+                    pattern_conformity_scorer=pattern_conformity_scorer,
                     fluency_scorer=fluency_scorer,
                     **kwargs
                 )

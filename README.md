@@ -23,7 +23,7 @@ The system analyzes argumentative text and identifies inappropriate parts based 
 ### Key Features
 
 - **Dual Reward System**: Combines local (edit-level) and global (document-level) rewards with 80/20 weighting
-- **Multi-component Scorers**: Semantic similarity, fluency, and human-likeness evaluation
+- **Multi-component Scorers**: Semantic similarity, fluency, and pattern conformity evaluation
 - **Two-step Evaluation Pipeline**: Separate generation and scoring for efficient ablation studies
 - **Comprehensive Annotation Interface**: Django-based web application for human evaluation studies
 
@@ -92,7 +92,7 @@ python models/grpo.py \
     --output_dir models/trained/my_model \
     --use_semantic_similarity \
     --use_fluency \
-    --use_human_like
+    --use_pattern_conformity
 ```
 
 For detailed training options, see `models/grpo.py --help` and the [Training](#training) section below.
@@ -117,11 +117,11 @@ python models/evaluate_edits.py \
     --input_jsonl models/generated_edits/my_model.jsonl \
     --output_jsonl models/predictions/my_model_all.jsonl
 
-# Ablation: disable human-likeness scorer
+# Ablation: disable pattern conformity scorer
 python models/evaluate_edits.py \
     --input_jsonl models/generated_edits/my_model.jsonl \
     --output_jsonl models/predictions/my_model_no_hl.jsonl \
-    --disable_human_like
+    --disable_pattern_conformity
 ```
 
 See `models/EVALUATION_WORKFLOW.md` for complete documentation.
@@ -148,7 +148,7 @@ python models/grpo.py \
     --output_dir models/trained/my_model \
     --use_semantic_similarity \
     --use_fluency \
-    --use_human_like
+    --use_pattern_conformity
 ```
 
 ### Resume from Checkpoint

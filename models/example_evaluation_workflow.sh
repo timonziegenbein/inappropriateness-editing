@@ -46,19 +46,19 @@ python models/evaluate_edits.py \
     --input_jsonl "$EDITS_DIR/my_model_${SPLIT}.jsonl" \
     --output_jsonl "$PREDICTIONS_DIR/my_model_${SPLIT}_default.jsonl"
 
-# Configuration 2: Without human-like scorer (ablation)
-echo "Evaluating without human-like scorer..."
+# Configuration 2: Without pattern conformity scorer (ablation)
+echo "Evaluating without pattern conformity scorer..."
 python models/evaluate_edits.py \
     --input_jsonl "$EDITS_DIR/my_model_${SPLIT}.jsonl" \
-    --output_jsonl "$PREDICTIONS_DIR/my_model_${SPLIT}_no_hl.jsonl" \
-    --disable_human_like
+    --output_jsonl "$PREDICTIONS_DIR/my_model_${SPLIT}_no_pc.jsonl" \
+    --disable_pattern_conformity
 
 # Configuration 3: Only semantic similarity and fluency
 echo "Evaluating with only SS and fluency..."
 python models/evaluate_edits.py \
     --input_jsonl "$EDITS_DIR/my_model_${SPLIT}.jsonl" \
     --output_jsonl "$PREDICTIONS_DIR/my_model_${SPLIT}_ss_fl_only.jsonl" \
-    --disable_human_like \
+    --disable_pattern_conformity \
     --disable_appropriateness
 
 echo ""
@@ -71,7 +71,7 @@ echo "  - $EDITS_DIR/my_model_${SPLIT}.jsonl"
 echo ""
 echo "Evaluation results saved to:"
 echo "  - $PREDICTIONS_DIR/my_model_${SPLIT}_default.jsonl (all scorers)"
-echo "  - $PREDICTIONS_DIR/my_model_${SPLIT}_no_hl.jsonl (ablation: no human-like)"
+echo "  - $PREDICTIONS_DIR/my_model_${SPLIT}_no_pc.jsonl (ablation: no pattern conformity)"
 echo "  - $PREDICTIONS_DIR/my_model_${SPLIT}_ss_fl_only.jsonl (only SS and fluency)"
 echo ""
 echo "To visualize results:"

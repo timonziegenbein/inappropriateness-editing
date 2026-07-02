@@ -133,7 +133,7 @@ def main():
     ]
 
     with open(args.output_file, "w") as f:
-        f.write(f"Human-like Threshold: {args.percentile_threshold or 'N/A'}\n")
+        f.write(f"Pattern conformity Threshold: {args.percentile_threshold or 'N/A'}\n")
         f.write(f"Semantic Similarity Threshold: {args.ss_threshold}\n")
 
         for i, example in enumerate(examples):
@@ -154,15 +154,15 @@ def main():
                 
                 if sequence:
                     perplexity = calculate_perplexity_for_sequence(sequence, model, vocab, device, max_len)
-                    f.write(f"Human-like Perplexity: {perplexity:.4f}\n")
+                    f.write(f"Pattern conformity Perplexity: {perplexity:.4f}\n")
 
                     if args.percentile_threshold is not None:
                         if perplexity > args.percentile_threshold:
-                            f.write("Human-like Result: Out-of-Distribution (Not human-like)\n")
+                            f.write("Pattern conformity Result: Out-of-Distribution (Not pattern conformity)\n")
                         else:
-                            f.write("Human-like Result: In-Distribution (Human-like)\n")
+                            f.write("Pattern conformity Result: In-Distribution (Pattern conformity)\n")
                     else:
-                        f.write("Human-like Result: N/A (no threshold provided)\n")
+                        f.write("Pattern conformity Result: N/A (no threshold provided)\n")
 
                     # Semantic Similarity Check
                     if inappropriate_part and rewritten_part:

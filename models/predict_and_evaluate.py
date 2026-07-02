@@ -45,9 +45,9 @@ from prompts.edit_inappropriate_text import create_llm_prompt
 from scorers.local_scorers.fluency.fluency_scorer import FluencyScorer
 from scorers.appropriateness.appropriateness_scorer import AppropriatenessScorer
 from scorers.local_scorers.semantic_similarity.semantic_similarity_scorer import SemanticSimilarityScorer
-from scorers.local_scorers.human_like.human_like_scorer import HumanLikeScorer
+from scorers.local_scorers.pattern_conformity.pattern_conformity_scorer import PatternConformityScorer
 from scorers.global_scorers.semantic_similarity.global_semantic_similarity_scorer import GlobalSemanticSimilarityScorer
-from scorers.global_scorers.human_like.global_human_like_scorer import GlobalHumanLikeScorer
+from scorers.global_scorers.pattern_conformity.global_pattern_conformity_scorer import GlobalPatternConformityScorer
 from scorers.global_scorers.fluency.global_fluency_scorer import GlobalFluencyScorer
 from ops.completion_processor import process_completion
 from ops.prompt_processor import process_prompt
@@ -142,14 +142,14 @@ _device = torch.device(f"cuda:{_local_rank}" if _cuda_available else "cpu")
 # Initialize local scorers
 logger.info("Loading local scorers...")
 _semantic_similarity_scorer = SemanticSimilarityScorer(_device)
-_human_like_scorer = HumanLikeScorer(_device)  # Uses v4 model and P99 threshold by default
+_pattern_conformity_scorer = PatternConformityScorer(_device)  # Uses v4 model and P99 threshold by default
 _fluency_scorer = FluencyScorer(_device)
 _appropriateness_scorer = AppropriatenessScorer(_device)
 
 # Initialize global scorers
 logger.info("Loading global scorers...")
 _global_semantic_similarity_scorer = GlobalSemanticSimilarityScorer(_device, threshold=0.80)
-_global_human_like_scorer = GlobalHumanLikeScorer(_device, threshold=5.0)
+_global_pattern_conformity_scorer = GlobalPatternConformityScorer(_device, threshold=5.0)
 _global_fluency_scorer = GlobalFluencyScorer(_device)
 
 # BERTScorer for document-level similarity
@@ -248,7 +248,7 @@ def score_edit(original_argument: str, edit: Dict[str, Any], baseline_scores: Di
 
     semantic_similarity = 0.0
     fluency_score = 0.0
-    human_like = 0.0
+    pattern_conformity = 0.0
     app_reward = 0.0
     reason_correct = False
     classifier_true_reason = None
@@ -274,16 +274,16 @@ def score_edit(original_argument: str, edit: Dict[str, Any], baseline_scores: Di
             fluency_score = 0.0
             logger.error(f"Fluency check failed: {e}")
 
-        # Human-like
+        # Pattern conformity
         try:
             context = original_sentence_context if original_sentence_context is not None else original_argument
-            human_like = _human_like_scorer.calculate_human_likeness(
+            pattern_conformity = _pattern_conformity_scorer.calculate_pattern_conformity(
                 original_argument, context, inappropriate_part, rewritten_part
             )
-            logger.info(f"Human-like score: {human_like}")
+            logger.info(f"Pattern conformity score: {pattern_conformity}")
         except Exception as e:
-            human_like = 0.0
-            logger.error(f"Human-like check failed: {e}")
+            pattern_conformity = 0.0
+            logger.error(f"Pattern conformity check failed: {e}")
 
         # Edit-level appropriateness classifier reward (single-edit replacement on original)
         try:
@@ -336,9 +336,9 @@ def score_edit(original_argument: str, edit: Dict[str, Any], baseline_scores: Di
             logger.error(f"App reward check failed: {e}")
 
 
-    # Perfect reward: all three main rewards (semantic_similarity, fluency, human_like) are 1.0
+    # Perfect reward: all three main rewards (semantic_similarity, fluency, pattern_conformity) are 1.0
     # Note: excludes appropriateness (classifier not reliable for small edits)
-    perfect = 1.0 if (is_well_formed and semantic_similarity == 1.0 and fluency_score == 1.0 and human_like == 1.0) else 0.0
+    perfect = 1.0 if (is_well_formed and semantic_similarity == 1.0 and fluency_score == 1.0 and pattern_conformity == 1.0) else 0.0
     logger.info(f"Perfect score: {perfect} (excludes app reward)")
 
     return {
@@ -351,7 +351,7 @@ def score_edit(original_argument: str, edit: Dict[str, Any], baseline_scores: Di
         "rewards": {
             "semantic_similarity": float(semantic_similarity),
             "fluency": float(fluency_score),
-            "human_like": float(human_like),
+            "pattern_conformity": float(pattern_conformity),
             "app": float(app_reward),
             "perfect": float(perfect),
         },
@@ -722,7 +722,7 @@ def main(checkpoint_root: str, output_jsonl: str, use_base_model_only: bool = Fa
 
             # Global scorer metrics (for perfect edits)
             global_ss_binary, global_ss_score = 0.0, 0.0
-            global_hl_binary, global_hl_perplexity = 0.0, float('inf')
+            global_pc_binary, global_pc_perplexity = 0.0, float('inf')
             global_fluency_binary, global_fluency_confidence = 0.0, 0.0
 
             try:
@@ -734,12 +734,12 @@ def main(checkpoint_root: str, output_jsonl: str, use_base_model_only: bool = Fa
                 logger.error(f"Global semantic similarity (perfect) failed: {e}")
 
             try:
-                # Global human-likeness (perfect edits)
-                global_hl_binary, global_hl_perplexity = _global_human_like_scorer.calculate_global_human_likeness(
+                # Global pattern conformity (perfect edits)
+                global_pc_binary, global_pc_perplexity = _global_pattern_conformity_scorer.calculate_global_pattern_conformity(
                     argument, perfect_edits
                 )
             except Exception as e:
-                logger.error(f"Global human-likeness (perfect) failed: {e}")
+                logger.error(f"Global pattern conformity (perfect) failed: {e}")
 
             try:
                 # Global fluency (perfect edits)
@@ -751,7 +751,7 @@ def main(checkpoint_root: str, output_jsonl: str, use_base_model_only: bool = Fa
 
             # Global scorer metrics (for all valid edits)
             global_ss_binary_all, global_ss_score_all = 0.0, 0.0
-            global_hl_binary_all, global_hl_perplexity_all = 0.0, float('inf')
+            global_pc_binary_all, global_pc_perplexity_all = 0.0, float('inf')
             global_fluency_binary_all, global_fluency_confidence_all = 0.0, 0.0
 
             try:
@@ -763,12 +763,12 @@ def main(checkpoint_root: str, output_jsonl: str, use_base_model_only: bool = Fa
                 logger.error(f"Global semantic similarity (all) failed: {e}")
 
             try:
-                # Global human-likeness (all valid edits)
-                global_hl_binary_all, global_hl_perplexity_all = _global_human_like_scorer.calculate_global_human_likeness(
+                # Global pattern conformity (all valid edits)
+                global_pc_binary_all, global_pc_perplexity_all = _global_pattern_conformity_scorer.calculate_global_pattern_conformity(
                     argument, all_valid_edits
                 )
             except Exception as e:
-                logger.error(f"Global human-likeness (all) failed: {e}")
+                logger.error(f"Global pattern conformity (all) failed: {e}")
 
             try:
                 # Global fluency (all valid edits)
@@ -834,16 +834,16 @@ def main(checkpoint_root: str, output_jsonl: str, use_base_model_only: bool = Fa
                 "global_scores": {
                     "semantic_similarity_binary": global_ss_binary,
                     "semantic_similarity_score": global_ss_score,
-                    "human_like_binary": global_hl_binary,
-                    "human_like_perplexity": global_hl_perplexity,
+                    "pattern_conformity_binary": global_pc_binary,
+                    "pattern_conformity_perplexity": global_pc_perplexity,
                     "fluency_binary": global_fluency_binary,
                     "fluency_confidence": global_fluency_confidence,
                 },
                 "global_scores_all": {
                     "semantic_similarity_binary": global_ss_binary_all,
                     "semantic_similarity_score": global_ss_score_all,
-                    "human_like_binary": global_hl_binary_all,
-                    "human_like_perplexity": global_hl_perplexity_all,
+                    "pattern_conformity_binary": global_pc_binary_all,
+                    "pattern_conformity_perplexity": global_pc_perplexity_all,
                     "fluency_binary": global_fluency_binary_all,
                     "fluency_confidence": global_fluency_confidence_all,
                 },
