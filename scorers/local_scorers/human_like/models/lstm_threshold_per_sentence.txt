@@ -1,0 +1,5 @@
+2.986336
+# LSTM Perplexity Threshold (strategy-level (per-sentence))
+# Computed from 64572 training sequences
+# Q1=1.393209, Q3=2.030460, IQR=0.637251
+# Threshold = Q3 + 1.5×IQR = 2.986336

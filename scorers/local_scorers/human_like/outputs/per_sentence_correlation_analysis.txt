@@ -1,0 +1,107 @@
+================================================================================
+PER-SENTENCE CORRELATION ANALYSIS: Editing Strategy
+================================================================================
+
+PAIRWISE CORRELATIONS (Combined across all sources)
+================================================================================
+
+Approach 1           Approach 2           Pearson r    Spearman ρ  
+----------------------------------------------------------------------
+ISO only             HMM only             0.5328       0.5503      
+ISO only             ISO+HMM              0.9760       0.9739      
+ISO only             HMM as ISO feature   0.5907       0.6460      
+HMM only             ISO+HMM              0.6178       0.6212      
+HMM only             HMM as ISO feature   0.8085       0.7753      
+ISO+HMM              HMM as ISO feature   0.7155       0.7414      
+
+================================================================================
+PER-SOURCE CORRELATIONS: ISO only vs HMM only
+================================================================================
+
+Source       Pearson r       Spearman ρ      Interpretation
+----------------------------------------------------------------------
+Human        0.2310          0.1226          Weak correlation
+Coedit       0.3957          0.4517          Weak correlation
+Llama        0.5299          0.6052          Moderate correlation
+Gemini       0.6047          0.6685          Moderate correlation
+
+================================================================================
+RANKING AGREEMENT ANALYSIS: ISO only vs HMM only
+================================================================================
+
+Do HMM and ISO agree on which examples score highest?
+(Using top 20% as 'high scoring')
+
+Human:
+  Both high: 147/2614 (5.6%)
+  HMM high only: 2467
+  ISO high only: 2484
+  Jaccard similarity: 0.029
+
+Coedit:
+  Both high: 466/1708 (27.3%)
+  HMM high only: 1242
+  ISO high only: 1243
+  Jaccard similarity: 0.158
+
+Llama:
+  Both high: 1256/2554 (49.2%)
+  HMM high only: 1298
+  ISO high only: 1297
+  Jaccard similarity: 0.326
+
+Gemini:
+  Both high: 957/1654 (57.9%)
+  HMM high only: 697
+  ISO high only: 697
+  Jaccard similarity: 0.407
+
+================================================================================
+DISAGREEMENT ANALYSIS: ISO only vs HMM only
+================================================================================
+
+Examples where models strongly disagree:
+(HMM high but ISO low, or vice versa)
+
+Human:
+  Strong disagreements: 181 (1.4%)
+  HMM high + ISO low: 9
+  HMM low + ISO high: 81
+
+Coedit:
+  Strong disagreements: 562 (6.6%)
+  HMM high + ISO low: 57
+  HMM low + ISO high: 334
+
+Llama:
+  Strong disagreements: 458 (3.6%)
+  HMM high + ISO low: 28
+  HMM low + ISO high: 239
+
+Gemini:
+  Strong disagreements: 617 (7.5%)
+  HMM high + ISO low: 8
+  HMM low + ISO high: 504
+
+================================================================================
+CONCLUSION
+================================================================================
+
+✓ Moderate correlation detected between ISO and HMM.
+The models capture some shared information but also independent signals.
+Combining them likely provides complementary information.
+
+================================================================================
+STRATEGY-LEVEL INTERPRETATION
+================================================================================
+
+Per-sentence analysis evaluates EDITING STRATEGY:
+  - One sample per sentence (all edits combined)
+  - Captures how models coordinate multiple edits
+  - 3× stronger discrimination than edit-level (+11.2% vs +3.7%)
+
+Key finding: Models make locally regular but globally unnatural edits.
+  - HMM shows reversed ranking at edit-level (-5.5%)
+  - HMM shows correct ranking at strategy-level (+22.2%, d=1.02)
+  - Indicates individual edits are overly predictable
+  - But overall editing strategies are unnatural

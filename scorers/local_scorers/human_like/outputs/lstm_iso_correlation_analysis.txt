@@ -1,0 +1,188 @@
+================================================================================
+CORRELATION ANALYSIS: LSTM vs ISO
+================================================================================
+
+================================================================================
+EDIT LEVEL
+================================================================================
+
+OVERALL CORRELATION (Combined across all sources)
+--------------------------------------------------------------------------------
+
+Pearson correlation:  -0.1266
+Spearman correlation: 0.1297
+
+PER-SOURCE CORRELATIONS
+--------------------------------------------------------------------------------
+
+Source       Pearson r       Spearman ρ      Interpretation
+----------------------------------------------------------------------
+Human        -0.1477         -0.0690         Very weak/no correlation
+Coedit       0.0570          0.3619          Very weak/no correlation
+Llama        -0.0996         0.1514          Very weak/no correlation
+Gemini       -0.2925         -0.0482         Weak correlation
+
+================================================================================
+RANKING AGREEMENT ANALYSIS
+================================================================================
+
+Do ISO and LSTM agree on which examples score highest?
+(Using top 20% as 'high scoring')
+
+Human:
+  Both high: 107/2813 (3.8%)
+  ISO high only: 2706
+  LSTM high only: 2698
+  Jaccard similarity: 0.019
+
+Coedit:
+  Both high: 0/4213 (0.0%)
+  ISO high only: 4213
+  LSTM high only: 4220
+  Jaccard similarity: 0.000
+
+Llama:
+  Both high: 3/7722 (0.0%)
+  ISO high only: 7719
+  LSTM high only: 7680
+  Jaccard similarity: 0.000
+
+Gemini:
+  Both high: 58/4924 (1.2%)
+  ISO high only: 4866
+  LSTM high only: 4865
+  Jaccard similarity: 0.006
+
+================================================================================
+DISAGREEMENT ANALYSIS
+================================================================================
+
+Examples where models strongly disagree:
+(ISO high but LSTM low, or vice versa)
+
+Human:
+  Strong disagreements: 362 (2.6%)
+  ISO high + LSTM low: 7
+  ISO low + LSTM high: 103
+
+Coedit:
+  Strong disagreements: 403 (1.9%)
+  ISO high + LSTM low: 1
+  ISO low + LSTM high: 126
+
+Llama:
+  Strong disagreements: 750 (2.0%)
+  ISO high + LSTM low: 4
+  ISO low + LSTM high: 193
+
+Gemini:
+  Strong disagreements: 971 (3.9%)
+  ISO high + LSTM low: 2
+  ISO low + LSTM high: 292
+
+
+================================================================================
+STRATEGY LEVEL
+================================================================================
+
+OVERALL CORRELATION (Combined across all sources)
+--------------------------------------------------------------------------------
+
+Pearson correlation:  -0.3752
+Spearman correlation: -0.5356
+
+PER-SOURCE CORRELATIONS
+--------------------------------------------------------------------------------
+
+Source       Pearson r       Spearman ρ      Interpretation
+----------------------------------------------------------------------
+Human        -0.1303         -0.0901         Very weak/no correlation
+Coedit       -0.2429         -0.4728         Weak correlation
+Llama        -0.3090         -0.5407         Weak correlation
+Gemini       -0.3640         -0.5654         Weak correlation
+
+================================================================================
+RANKING AGREEMENT ANALYSIS
+================================================================================
+
+Do ISO and LSTM agree on which examples score highest?
+(Using top 20% as 'high scoring')
+
+Human:
+  Both high: 172/2631 (6.5%)
+  ISO high only: 2459
+  LSTM high only: 2442
+  Jaccard similarity: 0.034
+
+Coedit:
+  Both high: 565/1709 (33.1%)
+  ISO high only: 1144
+  LSTM high only: 1143
+  Jaccard similarity: 0.198
+
+Llama:
+  Both high: 1612/2553 (63.1%)
+  ISO high only: 941
+  LSTM high only: 941
+  Jaccard similarity: 0.461
+
+Gemini:
+  Both high: 1110/1654 (67.1%)
+  ISO high only: 544
+  LSTM high only: 545
+  Jaccard similarity: 0.505
+
+================================================================================
+DISAGREEMENT ANALYSIS
+================================================================================
+
+Examples where models strongly disagree:
+(ISO high but LSTM low, or vice versa)
+
+Human:
+  Strong disagreements: 284 (2.2%)
+  ISO high + LSTM low: 4
+  ISO low + LSTM high: 59
+
+Coedit:
+  Strong disagreements: 664 (7.8%)
+  ISO high + LSTM low: 8
+  ISO low + LSTM high: 327
+
+Llama:
+  Strong disagreements: 1310 (10.3%)
+  ISO high + LSTM low: 2
+  ISO low + LSTM high: 542
+
+Gemini:
+  Strong disagreements: 654 (7.9%)
+  ISO high + LSTM low: 16
+  ISO low + LSTM high: 321
+
+
+================================================================================
+CONCLUSION
+================================================================================
+
+Edit Level Correlation (Pearson): -0.1266
+Strategy Level Correlation (Pearson): -0.3752
+
+EDIT LEVEL:
+  ✓✓ Weak correlation - models capture different information
+  Combining provides strong complementary signals
+
+STRATEGY LEVEL:
+  ✓✓ Weak correlation - models capture different information
+  Combining provides strong complementary signals
+
+================================================================================
+KEY INSIGHTS
+================================================================================
+
+ISO: Captures distributional anomalies in edit operation features
+LSTM: Captures sequence-level predictability (perplexity)
+
+Both provide different perspectives on 'human-likeness':
+- ISO: Are the edit features statistically similar to human patterns?
+- LSTM: Is the sequence predictable based on learned patterns?
+

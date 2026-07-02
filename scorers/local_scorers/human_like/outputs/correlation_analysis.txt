@@ -1,0 +1,92 @@
+================================================================================
+CORRELATION ANALYSIS: All Human-Like Scorer Approaches
+================================================================================
+
+PAIRWISE CORRELATIONS (Combined across all sources)
+================================================================================
+
+Approach 1           Approach 2           Pearson r    Spearman ρ  
+----------------------------------------------------------------------
+ISO only             HMM only             0.1425       -0.0657     
+ISO only             ISO+HMM              0.9733       0.9758      
+ISO only             HMM as ISO feature   0.5242       0.5049      
+HMM only             ISO+HMM              0.0771       -0.1261     
+HMM only             HMM as ISO feature   -0.0448      -0.2521     
+ISO+HMM              HMM as ISO feature   0.6523       0.5877      
+
+================================================================================
+PER-SOURCE CORRELATIONS: ISO only vs HMM only
+================================================================================
+
+Source       Pearson r       Spearman ρ      Interpretation
+----------------------------------------------------------------------
+Human        0.2522          0.1290          Weak correlation
+Coedit       -0.0747         -0.2950         Very weak/no correlation
+Llama        0.1148          -0.0921         Very weak/no correlation
+Gemini       0.3185          0.1154          Weak correlation
+
+================================================================================
+RANKING AGREEMENT ANALYSIS: ISO only vs HMM only
+================================================================================
+
+Do HMM and ISO agree on which examples score highest?
+(Using top 20% as 'high scoring')
+
+Human:
+  Both high: 145/2805 (5.2%)
+  HMM high only: 2660
+  ISO high only: 2668
+  Jaccard similarity: 0.026
+
+Coedit:
+  Both high: 0/4224 (0.0%)
+  HMM high only: 4224
+  ISO high only: 4213
+  Jaccard similarity: 0.000
+
+Llama:
+  Both high: 0/7684 (0.0%)
+  HMM high only: 7684
+  ISO high only: 7722
+  Jaccard similarity: 0.000
+
+Gemini:
+  Both high: 46/4925 (0.9%)
+  HMM high only: 4879
+  ISO high only: 4878
+  Jaccard similarity: 0.005
+
+================================================================================
+DISAGREEMENT ANALYSIS: ISO only vs HMM only
+================================================================================
+
+Examples where models strongly disagree:
+(HMM high but ISO low, or vice versa)
+
+Human:
+  Strong disagreements: 219 (1.6%)
+  HMM high + ISO low: 21
+  HMM low + ISO high: 65
+
+Coedit:
+  Strong disagreements: 351 (1.7%)
+  HMM high + ISO low: 104
+  HMM low + ISO high: 64
+
+Llama:
+  Strong disagreements: 567 (1.5%)
+  HMM high + ISO low: 106
+  HMM low + ISO high: 140
+
+Gemini:
+  Strong disagreements: 324 (1.3%)
+  HMM high + ISO low: 50
+  HMM low + ISO high: 71
+
+================================================================================
+CONCLUSION
+================================================================================
+
+✓✓ Weak/no correlation detected between ISO and HMM!
+The models are capturing largely independent information.
+Combining them provides strong complementary signals.

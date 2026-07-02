@@ -1,0 +1,16 @@
+asgiref
+certifi
+dj-database-url
+Django
+django-heroku
+gunicorn
+numpy
+pandas
+psycopg2
+psycopg2-binary
+python-dateutil
+python-dotenv
+pytz
+six
+sqlparse
+whitenoise

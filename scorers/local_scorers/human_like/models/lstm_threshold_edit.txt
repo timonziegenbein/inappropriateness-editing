@@ -1,0 +1,5 @@
+2.503155
+# LSTM Perplexity Threshold (edit-level)
+# Computed from 85683 training sequences
+# Q1=1.300052, Q3=1.781293, IQR=0.481241
+# Threshold = Q3 + 1.5×IQR = 2.503155

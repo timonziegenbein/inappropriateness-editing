@@ -1,0 +1,7 @@
+{
+  "keep": 0,
+  "keep-in-edit": 1,
+  "del": 2,
+  "add": 3,
+  "replace": 4
+}

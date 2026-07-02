@@ -1,0 +1,267 @@
+{% load static %}
+{% load char_diff_filters %}
+{% include  "study/components/header.html" %}
+
+<style>
+  /* Diff styling - matching evaluation_interface.html */
+  del {
+    color: #d93025;
+    text-decoration: line-through;
+    background-color: rgba(234, 67, 53, 0.1);
+    padding: 1px 2px;
+    border-radius: 3px;
+  }
+  ins {
+    color: #188038;
+    text-decoration: none;
+    background-color: rgba(52, 168, 83, 0.15);
+    padding: 1px 2px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  .highlight-inappropriate {
+    cursor: pointer;
+    position: relative;
+    padding: 0 2px;
+    border-radius: 2px;
+    transition: background-color 0.15s ease;
+    text-decoration: none;
+    border-bottom: 2px dotted #ea4335;
+  }
+
+  .highlight-inappropriate:hover {
+    background-color: rgba(234, 67, 53, 0.1);
+  }
+
+  .diff-change {
+    font-weight: bold;
+    color: #d93025; /* red */
+  }
+
+  .highlight-appropriate {
+    padding: 0 2px;
+    border-bottom: 2px dotted #188038; /* green */
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+  }
+  .highlight-appropriate:hover {
+    background-color: rgba(52, 168, 83, 0.15);
+  }
+
+  .diff-add {
+    font-weight: bold;
+    color: #188038; /* green */
+    text-decoration: none;
+  }
+
+  .text-display {
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    min-height: 80px;
+    background: #fdfdfd;
+    line-height: 1.8;
+    font-size: 15px;
+    text-align: left;
+  }
+
+  .comparison-header {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    background-color: #f5f5f5;
+    padding: 12px 0;
+    margin-top: 20px;
+    margin-bottom: 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px 8px 0 0;
+  }
+</style>
+
+<div class="uk-container uk-container-large uk-margin-bottom">
+
+  <div class="uk-margin-top">
+    <h4><a href="{% url 'dashboard' %}">
+        << Back to Dashboard </a> </h4>
+    <div class="uk-alert uk-alert-primary uk-text-center" role="alert">You annotated
+    {{annotated}} out of {{total}} sentences
+  </div>
+</div>
+<div class="uk-card uk-card-default uk-card-body">
+
+ <div style="
+    display: table;
+    /* max-width: 50%; */
+    margin-left: auto;
+    margin-right: auto;
+">
+      <div style="
+    display: table-cell;
+    width: 45%;
+">
+      <h5 class="uk-card-title comparison-header">Original Sentence</h5>
+      <div class="text-display">
+        {% highlight_with_char_diff post.source post.inappropriate_part post.rewritten_part %}
+      </div>
+      </div>
+<div style="
+    display: table-cell;
+    width: 10%;
+    text-align: center;
+    vertical-align: middle;
+"><span class="arrow" style="
+    font-size: 100px;
+    margin: 0px;
+">→</span><div class="border" style="">
+
+</div></div>
+      <div style="
+    display: table-cell;
+">
+      <h5 class="uk-card-title comparison-header">Edited Sentence</h5>
+      <div class="text-display">
+        {% display_revised_diff post.source post.inappropriate_part post.rewritten_part %}
+      </div>
+      </div>
+  </div>
+
+      <HR width="100%"  color="#519459" size="2">
+    <form id="annotated-form" action="{% url 'save_annotation'  %}" method="post" class="uk-form-stacked" novalidate>
+
+  <div class="uk-container uk-container-large">
+      <input type="hidden" value="{{post.id}}" name="post_id" id="post_id">
+      <input type="hidden" value="{{post.source}}" name="post_text" id="post_text">
+      <input type="hidden" value="{{post.issue}}" name="post_issue" id="post_issue">
+      <input type="hidden" value="{{post.inappropriate_part}}" name="post_inappropriate_part" id="post_inappropriate_part">
+      <input type="hidden" value="{{post.rewritten_part}}" name="post_rewritten_part" id="post_rewritten_part">
+
+      {% csrf_token %}
+<div class="uk-margin-medium-bottom candidate-container">
+        <div class="questions-container">
+
+            <div class="uk-form-controls subcategory-container">
+                <div>
+<div class="other-error-types" id="errors-of">
+<div class="uk-container" style="
+    margin-right: 0px;
+    margin-left: 0px;
+    max-width: 100%;
+">
+<div class="uk-alert uk-alert-primary" uk-alert>
+    <p><strong>Note:</strong> A single edit is not necessarily required to solve all problems in a sentence, as there may be other edits that are not displayed here.</p>
+</div>
+<table style="width:100%">
+  <tbody><tr>
+<th style="
+    text-align: inherit;
+    font-size: x-large;
+">The edit ...
+</th>
+    <th style="
+    background-color: #ff8c5a; width: 150px; height: 50px;
+">1 (fully disagree)</th>
+    <th style="
+    background-color: #ffb234; width: 150px; height: 50px;
+">2</th>
+    <th style="
+    background-color: #ffd934; width: 150px; height: 50px;
+">3</th>
+    <th style="
+    background-color: #add633; width: 150px; height: 50px;
+">4</th>
+    <th style="
+    background-color: #a0c15a; width: 150px; height: 50px;
+">5 (fully agree)</th>
+  </tr>
+  <tr>
+                      <td style="padding: 20px; font-weight: 600;background-color: #ebebeb; height: 50px;"><label class="reply-label" for="other1">... is well-formed, with a balanced internal structure (the ratio of bold to dotted text) and is not a composite of several distinct edits.</label> </td>
+                      <td style="text-align: center;background-color: #ffccb5;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion1" id="other1" value="other1"></td>
+                      <td style="text-align: center;background-color: #ffd692;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion1" id="other2" value="other2"></td>
+                      <td style="text-align: center;background-color: #ffeea5;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion1" id="other3" value="other3"></td>
+                      <td style="text-align: center;background-color: #d3e990;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion1" id="other4" value="other4"></td>
+                      <td style="text-align: center;background-color: #c3d798;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion1" id="other5" value="other5"></td>
+  </tr>
+  <tr>
+                      <td style="padding: 20px; font-weight: 600;background-color: #ebebeb; height: 50px;"><label class="reply-label" for="other6">... preserves the original meaning of the sentence.</label> </td>
+                      <td style="text-align: center;background-color: #ffccb5;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion2" id="other6" value="other6"></td>
+                      <td style="text-align: center;background-color: #ffd692;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion2" id="other7" value="other7"></td>
+                      <td style="text-align: center;background-color: #ffeea5;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion2" id="other8" value="other8"></td>
+                      <td style="text-align: center;background-color: #d3e990;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion2" id="other9" value="other9"></td>
+                      <td style="text-align: center;background-color: #c3d798;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion2" id="other10" value="other10"></td>
+  </tr>
+  <tr>
+                      <td style="padding: 20px; font-weight: 600;background-color: #ebebeb; height: 50px;"><label class="reply-label" for="other11">... keeps or improves the fluency and grammaticality of the sentence.</label> </td>
+                      <td style="text-align: center;background-color: #ffccb5;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion3" id="other11" value="other11"></td>
+                      <td style="text-align: center;background-color: #ffd692;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion3" id="other12" value="other12"></td>
+                      <td style="background-color: #ffeea5;text-align: center;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion3" id="other13" value="other13"></td>
+                      <td style="text-align: center;background-color: #d3e990;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion3" id="other14" value="other14"></td>
+                      <td style="text-align: center;background-color: #c3d798;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion3" id="other15" value="other15"></td>
+  </tr>
+    <tr>
+                      <td style="padding: 20px; font-weight: 600;background-color: #ebebeb; height: 50px;"><label class="reply-label" for="other16">... looks like it is human-made.</label> </td>
+                      <td style="text-align: center;background-color: #ffccb5;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion4" id="other16" value="other16"></td>
+                      <td style="text-align: center;background-color: #ffd692;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion4" id="other17" value="other17"></td>
+                      <td style="background-color: #ffeea5;text-align: center;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion4" id="other18" value="other18"></td>
+                      <td style="text-align: center;background-color: #d3e990;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion4" id="other19" value="other19"></td>
+                      <td style="text-align: center;background-color: #c3d798;"><input class="uk-radio error-question" type="radio" name="otherErrorQuestion4" id="other20" value="other20"></td>
+  </tr>
+</tbody></table>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+      <HR width="100%"  color="#519459" size="2">
+      <!-- Feedback -->
+      <div class="uk-margin-medium-bottom uk-margin-small-top">
+<h5 class="uk-card-title" style="
+    font-weight: 600;
+    margin-bottom: 5px;
+    margin-top: 0px;
+">Optional Feedback:</h5>
+        <textarea class="uk-textarea" id="commentsTextArea" rows="3" name="comments" maxlength="1000" minlength="0"
+          placeholder="Provide any comments or additional feedback you may have. This will help us and is much appreciated.">{{comments}}</textarea>
+        <br>
+      </div>
+      <!-- End of feedback-->
+      <button type="submit" class="uk-button uk-button-primary uk-width-1-1">Submit</button>
+  </div>
+    </form>
+</div>
+<br>
+</div>
+</div>
+
+
+<script>
+  $(document).ready(function () {
+
+    // Disable submit button
+    $(':input[type="submit"]').prop('disabled', true);
+
+    function validateForm() {
+      var q1_answered = $('input[name=otherErrorQuestion1]:checked').length > 0;
+      var q2_answered = $('input[name=otherErrorQuestion2]:checked').length > 0;
+      var q3_answered = $('input[name=otherErrorQuestion3]:checked').length > 0;
+      var q4_answered = $('input[name=otherErrorQuestion4]:checked').length > 0;
+
+      if (q1_answered && q2_answered && q3_answered && q4_answered) {
+        $(':input[type="submit"]').prop('disabled', false);
+      } else {
+        $(':input[type="submit"]').prop('disabled', true);
+      }
+    }
+
+    $("input.error-question").on('change', function () {
+      validateForm();
+    });
+
+    validateForm(); // Initial check in case of pre-filled form
+  })
+</script>
+<script src="https://rawgit.com/andreruffert/rangeslider.js/develop/dist/rangeslider.min.js"></script>
+<script src="{% static 'study/js/slider.js' %}"></script>
+{% include "study/components/footer.html" %}
