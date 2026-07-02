@@ -1,9 +1,15 @@
-# Teaching LLMs Human-Like Editing of Inappropriate Argumentation via Reward Modeling in Reinforcement Learning
+# Teaching LLMs Human-Like Editing of Inappropriate Argumentation via Reinforcement Learning
 
 This repository contains the code and experimental setup for training and evaluating reinforcement learning models for identifying and editing inappropriate text in argumentative writing.
 
+## Paper
+
+**"Teaching LLMs Human-Like Editing of Inappropriate Argumentation via Reinforcement Learning"** (Ziegenbein et al., ACL 2026)
+- Available at: https://aclanthology.org/2026.acl-long.1789/
+
 ## Table of Contents
 
+- [Paper](#paper)
 - [Project Overview](#project-overview)
 - [Installation](#installation)
 - [System Requirements](#system-requirements)
